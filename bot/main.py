@@ -2,6 +2,7 @@ from aiogram.utils import executor
 
 from bot.create_bot import dp
 from bot.handlers import command_start
+from bot.admin import admin_commands
 
 
 async def on_startup(_):
@@ -10,6 +11,8 @@ async def on_startup(_):
 def start_bot():
 
     command_start.register_handler(dp)
+    admin_commands.register_handler(dp)
+
     executor.start_polling(dp,
                            skip_updates=True,
                            on_startup=on_startup)

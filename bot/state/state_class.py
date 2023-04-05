@@ -9,3 +9,4 @@ class Users(StatesGroup):
 class Admins(StatesGroup):
 
     admin = State()
+    admin_add_user = State()
