@@ -1,0 +1,1 @@
+from .main_log import entry_log
