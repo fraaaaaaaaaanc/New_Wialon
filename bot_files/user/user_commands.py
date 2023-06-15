@@ -1,10 +1,12 @@
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
+import os
 
 from loging import entry_log
-from bot.state import Users
-from bot.keyboards import Main_User_Menu
+from bot_files.state import Users, Admins
+from bot_files.keyboards import Main_User_Menu
 from .utils import Main_User_Menu_Text
+from completion_report.parsing import get_report
 
 
 async def Cmd_Fill_Report(message: types.Message):
@@ -20,7 +22,15 @@ async def Fill_Report(message: types.Message):
                              "Отправьте файл еще раз.")
         await entry_log(message.from_user.full_name, "отправил файл неверного формата - Пользователь\n")
     else:
-        await message.answer("!")
+        destination_dir = "C:\\pythonProject\\New_Wialon\\reports"
+        file_path = os.path.join(destination_dir, message.document['file_name'])
+        await message.document.download(file_path)
+        await message.answer("Это может занять какое то время.")
+        if message.caption != None:
+            result = get_report(message.caption, message.document.file_name)
+        await message.answer_document(open(file_path, 'rb'))
+        await Users.user.set()
+        await entry_log(message.from_user.full_name, "получил заполненный отчет - Пользователь\n")
 
 
 async def Get_Empty_Report(message: types.Message):
@@ -45,6 +55,18 @@ async def Cmd_Help(message: types.Message):
     await entry_log(message.from_user.full_name, "отправил команду /Help - Пользователь\n")
 
 
+async def Cmd_Stop(message: types.Message):
+    await message.answer("Действие выбранное вами ранее было остановленно.")
+    await Users.user.set()
+    await entry_log(message.from_user.full_name, "остановил выбранное ранее дествие - Пользователь\n")
+
+
+async def Message_Not_Info(message: types.Message):
+    await message.answer("Дождитесь пока отчет будет заполнен, после чего вы сможете отправлять команды.\n"
+                         "Либо отправьте команду /Stop для остановки заполнения отчета.")
+    await entry_log(message.from_user.full_name, "отправил сообщение во время заполнения отчет - Пользователь\n")
+
+
 async def Message_No_Cmd(message: types.Message):
     await message.answer("К сожалению такой команды не существует, попробуйте отправить другую команду"
                          " или выберите команду из меню.",
@@ -59,7 +81,8 @@ async def User(message: types.Message):
 def register_handler(dp: Dispatcher):
     dp.register_message_handler(Cmd_Fill_Report,
                                 commands=['FillReport'],
-                                state=Users.user)
+                                state=[Users.user,
+                                       Admins.admin])
     dp.register_message_handler(Fill_Report,
                                 content_types=['document'],
                                 state=Users.user_send_file)
@@ -72,6 +95,10 @@ def register_handler(dp: Dispatcher):
     dp.register_message_handler(Cmd_Help,
                                 commands=['Help'],
                                 state=Users.user)
+    dp.register_message_handler(Cmd_Stop,
+                                state=Users.user_send_file)
+    dp.register_message_handler(Message_Not_Info,
+                                state=Users.user_send_file)
     dp.register_message_handler(Message_No_Cmd,
                                 state=Users.user)
     dp.register_message_handler(User,

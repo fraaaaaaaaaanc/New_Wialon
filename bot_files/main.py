@@ -1,9 +1,9 @@
 from aiogram.utils import executor
 
-from bot.create_bot import dp
-from bot.handlers import command_start
-from bot.admin import admin_commands
-from bot.user import user_commands
+from bot_files.create_bot import dp
+from bot_files.handlers import command_start
+from bot_files.admin import admin_commands
+from bot_files.user import user_commands
 
 
 async def on_startup(_):
